@@ -1,31 +1,23 @@
-const express = require("express");
-const vue = require("vue");
-const vueServerRenderer = require("vue-server-renderer");
+import express from "express";
+import { createRenderer } from "vue-server-renderer";
+import Hello from "./hello";
+
 const server = express();
 
 server.get('*', (req, res) => {
-	const app = new vue({
-		data: {
-			url: req.url
-		},
-		template: `<div>ви відкрили: {{ url }}</div>`
+	const root = Hello({ message: "Текст повідомлення"});
+	const renderer = createRenderer({
+		template:  require('fs').readFileSync('index.template.html', 'utf-8')
 	});
-	const renderer = vueServerRenderer.createRenderer({
-		template: `<!DOCTYPE html>
-		                <html lang="en">
-		                  <head><title>Vue</title></head>
-		                  <body>
-		                    <!--vue-ssr-outlet-->
-		                  </body>
-		                </html>`
-	});
-	renderer.renderToString(app, (err, html) => {
+	renderer.renderToString(root, (err, html) => {
 		if (err) {
-			res.status(500).send('Internal server error')
-			return
+			console.log(err);
+			res.status(500).send('Internal server error');
+		} else {
+			res.send(html);
 		}
-		res.send(html);
 	});
 
 });
 server.listen(3000);
+console.log("Server run on http://localhost:3000/")
